@@ -9,6 +9,10 @@ import {
 
 import { BadRequestException } from './badRequest.exception';
 
+/**
+ * @Catch()
+ * @description This is a filter that catches all exceptions and returns a bad request exception
+ */
 @Catch()
 export class RequestExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {

@@ -9,13 +9,25 @@ import { LoginResponse, RegisterResponse } from './dto/auth.response';
 import { BadRequestException } from 'src/common/exceptions/badRequest.exception';
 import { ErrorConfig } from 'src/common/exceptions/errorConfig';
 
+/**
+ * @Injectable()
+ * @description This is a class for the auth service
+ */
 @Injectable()
 export class AuthService {
+  /**
+   * @constructor
+   * @description This is a constructor for the auth service
+   */
   constructor(
     private readonly jwtService: JwtService,
     private userRepo: UserRepository,
   ) {}
 
+  /**
+   * @method register
+   * @description This is a method for the auth service to register a new user
+   */
   async register(request: RegisterRequest): Promise<RegisterResponse> {
     // check if user already exists
     const user = await this.userRepo.findOneByUsername(request.username);
@@ -33,6 +45,10 @@ export class AuthService {
     };
   }
 
+  /**
+   * @method login
+   * @description This is a method for the auth service to login a user
+   */
   async login(request: LoginRequest): Promise<LoginResponse> {
     // check if user exists
     const user = await this.userRepo.findOneByUsername(request.username);
@@ -45,7 +61,10 @@ export class AuthService {
     };
   }
 
-  // generate token
+  /**
+   * @method generateToken
+   * @description This is a method for the auth service to generate a token
+   */
   private generateToken(user: User): string {
     return this.jwtService.sign({
       userId: user.id,

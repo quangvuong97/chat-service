@@ -12,8 +12,16 @@ import { UserContext } from 'src/common/asyncLocalStorage/userContext';
 import { MONGOOSE_EX_CUSTOM_REPOSITORY } from './mongooseCustom.decorator';
 import { AsyncLocalStorageModule } from 'src/common/asyncLocalStorage/asyncLocalStorage.module';
 
+/**
+ * @class MongooseCustomModule
+ * @description This is a class for the mongoose custom module
+ */
 @Global()
 export class MongooseCustomModule {
+  /**
+   * @method forCustomRepository
+   * @description This is a method for the mongoose custom module to for custom repository
+   */
   public static forCustomRepository<T extends new (...args: unknown[]) => any>(
     repositories: T[],
   ): DynamicModule {

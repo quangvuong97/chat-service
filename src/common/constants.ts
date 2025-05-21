@@ -1,3 +1,7 @@
+/**
+ * @enum EEnvConfig
+ * @description This is an enum for the environment variables
+ */
 export enum EEnvConfig {
   // API_PORT
   API_PORT = 'API_PORT',

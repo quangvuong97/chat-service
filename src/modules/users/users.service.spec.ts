@@ -6,12 +6,14 @@ import { UserContext } from 'src/common/asyncLocalStorage/userContext';
 import { BadRequestException } from 'src/common/exceptions/badRequest.exception';
 import { Types } from 'mongoose';
 import { User } from 'src/database/user/user.schema';
+import { GetFriendsRequest } from './dto/user.request';
 
 describe('UsersService', () => {
   let service: UsersService;
 
   const mockUserRepository = {
     findById: jest.fn(),
+    getFriends: jest.fn(),
   };
 
   const mockAsyncLocalStorage = {
@@ -78,6 +80,83 @@ describe('UsersService', () => {
         userId: user.id,
         username: user.username,
       });
+    });
+  });
+
+  describe('getFriends', () => {
+    it('should call userRepository.getFriends with correct parameters', async () => {
+      // Arrange
+      const userId = new Types.ObjectId();
+      const userContext: UserContext = { userId, username: 'testuser' };
+
+      const request: GetFriendsRequest = {
+        keyword: 'test',
+        page: 1,
+        size: 10,
+      };
+
+      const mockFriends = [
+        {
+          toGetFriendResponse: () => ({
+            userId: 'friend-id-1',
+            username: 'friend1',
+          }),
+        },
+        {
+          toGetFriendResponse: () => ({
+            userId: 'friend-id-2',
+            username: 'friend2',
+          }),
+        },
+      ];
+
+      mockAsyncLocalStorage.getStore.mockReturnValue(userContext);
+      mockUserRepository.getFriends.mockResolvedValue(mockFriends);
+
+      // Act
+      const result = await service.getFriends(request);
+
+      // Assert
+      expect(mockAsyncLocalStorage.getStore).toHaveBeenCalled();
+      expect(mockUserRepository.getFriends).toHaveBeenCalledWith(
+        userId,
+        request,
+      );
+      expect(result).toEqual([
+        {
+          userId: 'friend-id-1',
+          username: 'friend1',
+        },
+        {
+          userId: 'friend-id-2',
+          username: 'friend2',
+        },
+      ]);
+    });
+
+    it('should handle empty friend list', async () => {
+      // Arrange
+      const userId = new Types.ObjectId();
+      const userContext: UserContext = { userId, username: 'testuser' };
+
+      const request: GetFriendsRequest = {
+        page: 1,
+        size: 10,
+      };
+
+      mockAsyncLocalStorage.getStore.mockReturnValue(userContext);
+      mockUserRepository.getFriends.mockResolvedValue([]);
+
+      // Act
+      const result = await service.getFriends(request);
+
+      // Assert
+      expect(mockAsyncLocalStorage.getStore).toHaveBeenCalled();
+      expect(mockUserRepository.getFriends).toHaveBeenCalledWith(
+        userId,
+        request,
+      );
+      expect(result).toEqual([]);
     });
   });
 });

@@ -11,8 +11,16 @@ import { UserContext } from 'src/common/asyncLocalStorage/userContext';
 import { SuccessResponse } from 'src/common/exceptions/successRequest.response';
 import { JwtPayload } from 'src/guards/jwt/jwt.type';
 
+/**
+ * @Injectable()
+ * @description This is a class for the request interceptor
+ */
 @Injectable()
 export class RequestInterceptor implements NestInterceptor {
+  /**
+   * @constructor
+   * @description This is a constructor for the request interceptor
+   */
   constructor(private readonly als: AsyncLocalStorage<UserContext>) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {

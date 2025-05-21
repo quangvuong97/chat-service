@@ -5,6 +5,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { EEnvConfig } from 'src/common/constants';
 
+/**
+ * @Module
+ * @description This is a module for the auth
+ */
 @Module({
   imports: [
     JwtModule.registerAsync({

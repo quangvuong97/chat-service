@@ -1,5 +1,9 @@
 import { HttpStatus } from '@nestjs/common';
 
+/**
+ * @interface SuccessResponseData
+ * @description This is an interface for the success response data
+ */
 interface SuccessResponseData<T> {
   data: T;
   totalPages?: number;
@@ -8,6 +12,10 @@ interface SuccessResponseData<T> {
   totalElements?: number;
 }
 
+/**
+ * @class SuccessResponse
+ * @description This is a class for the success response
+ */
 export class SuccessResponse<T> {
   private code = HttpStatus.OK;
 
@@ -25,6 +33,10 @@ export class SuccessResponse<T> {
 
   private totalElements?: number;
 
+  /**
+   * @constructor
+   * @description This is a constructor for the success response
+   */
   constructor(
     { data, totalPages, page, size, totalElements }: SuccessResponseData<T>,
     message?: string,

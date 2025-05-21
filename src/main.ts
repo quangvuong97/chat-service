@@ -9,6 +9,8 @@ import { RequestExceptionsFilter } from './common/exceptions/requestExceptions.f
 import { SocketIoAdapter } from './common/adapters/socketIo.adapter';
 import { AsyncLocalStorage } from 'async_hooks';
 import { RequestInterceptor } from './interceptor/requestInterceptor.filter';
+import { SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder } from '@nestjs/swagger';
 
 export const NAME_JOB = 'Chat Service';
 
@@ -49,6 +51,18 @@ async function bootstrap() {
 
   // get port
   const port = configService.get(EEnvConfig.API_PORT) || 3000;
+
+  //swagger
+  const config = new DocumentBuilder()
+    .setTitle('CHAT SERVICE')
+    .setDescription('Chat Service API')
+    .setVersion('1.0')
+    .addTag('CHAT SERVICE')
+    .addBearerAuth({ type: 'http', scheme: 'bearer' }, 'bearer')
+    .addServer(`http://localhost:${port}`, 'LOCAL')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   // listen
   await app.listen(port);

@@ -13,8 +13,16 @@ import { JwtPayload } from './jwt.type';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from 'src/common/decorator/public';
 
+/**
+ * @class JwtAuthGuard
+ * @description This is a class for the jwt auth guard
+ */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
+  /**
+   * @constructor
+   * @description This is a constructor for the jwt auth guard
+   */
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
@@ -23,6 +31,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
+  /**
+   * @method canActivate
+   * @description This is a method for the jwt auth guard to can activate
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -48,6 +60,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return true;
   }
 
+  /**
+   * @method extractTokenFromHeader
+   * @description This is a method for the jwt auth guard to extract token from header
+   */
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;

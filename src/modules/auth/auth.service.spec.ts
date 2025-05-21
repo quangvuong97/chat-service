@@ -5,7 +5,6 @@ import { UserRepository } from 'src/database/user/user.repository';
 import { UnauthorizedException } from '@nestjs/common';
 import { BadRequestException } from 'src/common/exceptions/badRequest.exception';
 import { LoginRequest, RegisterRequest } from './dto/auth.request';
-import { User } from 'src/database/user/user.schema';
 import * as bcrypt from 'bcrypt';
 
 // Chỉ mock bcrypt
@@ -79,12 +78,17 @@ describe('AuthService', () => {
       };
 
       const hashedPassword = 'hashed-password';
-      const newUser = new User(registerRequest.username, hashedPassword);
-      newUser.id = 'user-id';
+      // Define User with id property
+      const newUser = {
+        username: registerRequest.username,
+        password: hashedPassword,
+        id: 'user-id',
+      };
 
       const token = 'generated-token';
 
       mockUserRepository.findOneByUsername.mockResolvedValue(null);
+      mockUserRepository.model.create.mockResolvedValue(newUser);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
       mockJwtService.sign.mockReturnValue(token);
 
@@ -96,7 +100,10 @@ describe('AuthService', () => {
         registerRequest.username,
       );
       expect(bcrypt.hash).toHaveBeenCalledWith(registerRequest.password, 10);
-      expect(mockJwtService.sign).toHaveBeenCalled();
+      expect(mockJwtService.sign).toHaveBeenCalledWith({
+        userId: newUser.id,
+        username: newUser.username,
+      });
       expect(result).toEqual({ accessToken: token });
     });
   });
@@ -127,7 +134,11 @@ describe('AuthService', () => {
         password: 'wrongpassword',
       };
 
-      const existingUser = new User('existinguser', 'hashed-password');
+      const existingUser = {
+        username: 'existinguser',
+        password: 'hashed-password',
+        id: 'user-id',
+      };
 
       mockUserRepository.findOneByUsername.mockResolvedValue(existingUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
@@ -152,8 +163,11 @@ describe('AuthService', () => {
         password: 'correctpassword',
       };
 
-      const existingUser = new User('existinguser', 'hashed-password');
-      existingUser.id = 'user-id';
+      const existingUser = {
+        username: 'existinguser',
+        password: 'hashed-password',
+        id: 'user-id',
+      };
 
       const token = 'generated-token';
 
@@ -172,7 +186,10 @@ describe('AuthService', () => {
         loginRequest.password,
         existingUser.password,
       );
-      expect(mockJwtService.sign).toHaveBeenCalled();
+      expect(mockJwtService.sign).toHaveBeenCalledWith({
+        userId: existingUser.id,
+        username: existingUser.username,
+      });
       expect(result).toEqual({ accessToken: token });
     });
   });

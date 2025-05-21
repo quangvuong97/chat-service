@@ -5,7 +5,13 @@ import { EEnvConfig } from 'src/common/constants';
 
 import { MongooseCustomModule } from './mongooseCustom.module';
 import { UserRepository } from './user/user.repository';
+import { GroupChatRepository } from './groupChat/groupChat.repository';
+import { MessageRepository } from './message/message.repository';
 
+/**
+ * @module DatabaseModule
+ * @description This is a module for the database
+ */
 @Module({
   imports: [
     MongooseModule.forRootAsync({
@@ -16,7 +22,11 @@ import { UserRepository } from './user/user.repository';
         dbName: 'chat_data',
       }),
     }),
-    MongooseCustomModule.forCustomRepository([UserRepository]),
+    MongooseCustomModule.forCustomRepository([
+      UserRepository,
+      GroupChatRepository,
+      MessageRepository,
+    ]),
   ],
 })
 export class DatabaseModule {}

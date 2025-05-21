@@ -1,6 +1,10 @@
 import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
 import * as winston from 'winston';
 
+/**
+ * @function createLoggerOption
+ * @description This is a function for the create logger option
+ */
 export function createLoggerOption(appName: string) {
   return {
     transports: [
