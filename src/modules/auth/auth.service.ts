@@ -11,14 +11,10 @@ import { ErrorConfig } from 'src/common/exceptions/errorConfig';
 
 /**
  * @Injectable()
- * @description This is a class for the auth service
+ * @description Service handles user authentication functionalities.
  */
 @Injectable()
 export class AuthService {
-  /**
-   * @constructor
-   * @description This is a constructor for the auth service
-   */
   constructor(
     private readonly jwtService: JwtService,
     private userRepo: UserRepository,
@@ -26,7 +22,7 @@ export class AuthService {
 
   /**
    * @method register
-   * @description This is a method for the auth service to register a new user
+   * @description Register a new user in the system.
    */
   async register(request: RegisterRequest): Promise<RegisterResponse> {
     // check if user already exists
@@ -47,7 +43,7 @@ export class AuthService {
 
   /**
    * @method login
-   * @description This is a method for the auth service to login a user
+   * @description Authenticate and login user.
    */
   async login(request: LoginRequest): Promise<LoginResponse> {
     // check if user exists
@@ -63,7 +59,7 @@ export class AuthService {
 
   /**
    * @method generateToken
-   * @description This is a method for the auth service to generate a token
+   * @description Generate JWT token from user information.
    */
   private generateToken(user: User): string {
     return this.jwtService.sign({

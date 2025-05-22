@@ -7,14 +7,12 @@ import { JwtPayload } from './jwt.type';
 
 /**
  * @Injectable()
- * @description This is a class for the jwt strategy
+ * @description Chiến lược JWT cho Passport.js, xử lý việc xác thực token JWT.
+ * Lớp này định nghĩa cách trích xuất và xác thực JWT token từ request,
+ * sử dụng để bảo vệ các endpoint yêu cầu xác thực.
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  /**
-   * @constructor
-   * @description This is a constructor for the jwt strategy
-   */
   constructor(private configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -23,10 +21,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  /**
-   * @method validate
-   * @description This is a method for the jwt strategy to validate
-   */
   async validate(payload: JwtPayload) {
     return payload;
   }

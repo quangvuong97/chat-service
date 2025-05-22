@@ -5,7 +5,7 @@ import { AsyncLocalStorageModule } from 'src/common/asyncLocalStorage/asyncLocal
 
 /**
  * @Module
- * @description This is a module for the users
+ * @description Module handles user functionalities.
  */
 @Module({
   imports: [AsyncLocalStorageModule],

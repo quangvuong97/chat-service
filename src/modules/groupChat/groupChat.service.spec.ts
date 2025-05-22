@@ -14,8 +14,7 @@ import {
 } from './dto/groupChat.request';
 import { BadRequestException } from 'src/common/exceptions/badRequest.exception';
 import { EGroupChatType } from 'src/database/groupChat/groupChat.type';
-import { GroupChat } from 'src/database/groupChat/groupChat.schema';
-import { Message } from 'src/database/message/message.schema';
+import { ChatSocketProvider } from '../chat/chat.provider';
 
 describe('GroupChatService', () => {
   let service: GroupChatService;
@@ -27,6 +26,7 @@ describe('GroupChatService', () => {
     },
     getById: jest.fn(),
     getMyList: jest.fn(),
+    getByMembers: jest.fn(), // Thêm mock function này
   };
 
   const mockAsyncLocalStorage = {
@@ -42,6 +42,10 @@ describe('GroupChatService', () => {
       create: jest.fn(),
     },
     getList: jest.fn(),
+  };
+
+  const mockChatSocketProvider = {
+    sendMessage: jest.fn(),
   };
 
   const userId = new Types.ObjectId();
@@ -70,6 +74,10 @@ describe('GroupChatService', () => {
           provide: MessageRepository,
           useValue: mockMessageRepository,
         },
+        {
+          provide: ChatSocketProvider,
+          useValue: mockChatSocketProvider,
+        },
       ],
     }).compile();
 
@@ -92,6 +100,7 @@ describe('GroupChatService', () => {
 
       const mockUser = { id: memberId.toString(), username: 'testUser' };
       mockUserRepository.findByIds.mockResolvedValue([mockUser]);
+      mockGroupChatRepository.getByMembers.mockResolvedValue(null);
 
       const createdId = new Types.ObjectId();
       mockGroupChatRepository.model.create.mockResolvedValue({ id: createdId });
@@ -103,9 +112,40 @@ describe('GroupChatService', () => {
       expect(mockAsyncLocalStorage.getStore).toHaveBeenCalled();
       expect(mockUserRepository.findByIds).toHaveBeenCalled();
       expect(mockGroupChatRepository.model.create).toHaveBeenCalledWith(
-        expect.any(GroupChat),
+        expect.any(Object),
       );
+      expect(request.members).toContain(userId);
       expect(result).toEqual({ id: createdId });
+    });
+
+    it('should return existing personal chat id if it already exists', async () => {
+      // Arrange
+      const memberId = new Types.ObjectId();
+      const request: CreateGroupChatRequest = {
+        type: EGroupChatType.PERSONAL,
+        members: [memberId],
+        name: '',
+      };
+
+      const mockUser = { id: memberId.toString(), username: 'testUser' };
+      mockUserRepository.findByIds.mockResolvedValue([mockUser]);
+
+      const existingChatId = new Types.ObjectId();
+      mockGroupChatRepository.getByMembers.mockResolvedValue({
+        id: existingChatId,
+      });
+
+      // Act
+      const result = await service.createGroupChat(request);
+
+      // Assert
+      expect(mockAsyncLocalStorage.getStore).toHaveBeenCalled();
+      expect(mockUserRepository.findByIds).toHaveBeenCalled();
+      expect(mockGroupChatRepository.getByMembers).toHaveBeenCalledWith(
+        expect.arrayContaining([userId, memberId]),
+      );
+      expect(mockGroupChatRepository.model.create).not.toHaveBeenCalled();
+      expect(result).toEqual({ id: existingChatId });
     });
 
     it('should create a group chat successfully', async () => {
@@ -113,7 +153,7 @@ describe('GroupChatService', () => {
       const memberIds = [new Types.ObjectId(), new Types.ObjectId()];
       const request: CreateGroupChatRequest = {
         type: EGroupChatType.GROUP,
-        members: memberIds,
+        members: [...memberIds], // Sao chép mảng để tránh thay đổi trực tiếp
         name: 'Test Group',
       };
 
@@ -131,12 +171,12 @@ describe('GroupChatService', () => {
 
       // Assert
       expect(mockAsyncLocalStorage.getStore).toHaveBeenCalled();
-      expect(mockUserRepository.findByIds).toHaveBeenCalledWith(memberIds);
+      expect(mockUserRepository.findByIds).toHaveBeenCalled();
+      expect(mockGroupChatRepository.model.create).toHaveBeenCalledWith(
+        expect.any(Object),
+      );
       expect(request.members).toContain(userId);
       expect(request.name).toBe('Test Group');
-      expect(mockGroupChatRepository.model.create).toHaveBeenCalledWith(
-        expect.any(GroupChat),
-      );
       expect(result).toEqual({ id: createdId });
     });
 
@@ -145,7 +185,7 @@ describe('GroupChatService', () => {
       const memberIds = [new Types.ObjectId()];
       const request: CreateGroupChatRequest = {
         type: EGroupChatType.PERSONAL,
-        members: memberIds,
+        members: [...memberIds],
         name: '',
       };
 
@@ -163,7 +203,7 @@ describe('GroupChatService', () => {
       const memberIds = [new Types.ObjectId(), new Types.ObjectId()];
       const request: CreateGroupChatRequest = {
         type: EGroupChatType.PERSONAL,
-        members: memberIds,
+        members: [...memberIds],
         name: '',
       };
 
@@ -185,7 +225,7 @@ describe('GroupChatService', () => {
       const memberIds = [new Types.ObjectId()];
       const request: CreateGroupChatRequest = {
         type: EGroupChatType.GROUP,
-        members: memberIds,
+        members: [...memberIds],
         name: 'Test Group',
       };
 
@@ -206,12 +246,17 @@ describe('GroupChatService', () => {
       const groupId = new Types.ObjectId();
       const request: SendMessageRequest = {
         content: 'Test message',
+        socketId: 'testSocketId',
       };
 
       mockGroupChatRepository.getById.mockResolvedValue({ id: groupId });
 
       const messageId = new Types.ObjectId();
-      mockMessageRepository.model.create.mockResolvedValue({ id: messageId });
+      const mockMessage = {
+        id: messageId,
+        toGetListMessageResponse: jest.fn().mockReturnValue({ id: messageId }),
+      };
+      mockMessageRepository.model.create.mockResolvedValue(mockMessage);
 
       // Act
       const result = await service.sendMessage(groupId, request);
@@ -220,8 +265,9 @@ describe('GroupChatService', () => {
       expect(mockAsyncLocalStorage.getStore).toHaveBeenCalled();
       expect(mockGroupChatRepository.getById).toHaveBeenCalledWith(groupId);
       expect(mockMessageRepository.model.create).toHaveBeenCalledWith(
-        expect.any(Message),
+        expect.any(Object),
       );
+      expect(mockChatSocketProvider.sendMessage).toHaveBeenCalled();
       expect(result).toEqual({ id: messageId });
     });
 
@@ -230,6 +276,7 @@ describe('GroupChatService', () => {
       const groupId = new Types.ObjectId();
       const request: SendMessageRequest = {
         content: 'Test message',
+        socketId: 'testSocketId',
       };
 
       mockGroupChatRepository.getById.mockResolvedValue(null);

@@ -8,14 +8,10 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { GetFriendsRequest } from './dto/user.request';
 /**
  * @Injectable()
- * @description This is a class for the users service
+ * @description Service handles user functionalities.
  */
 @Injectable()
 export class UsersService {
-  /**
-   * @constructor
-   * @description This is a constructor for the users service
-   */
   constructor(
     private readonly userRepo: UserRepository,
     private readonly als: AsyncLocalStorage<UserContext>,
@@ -23,10 +19,10 @@ export class UsersService {
 
   /**
    * @method getProfile
-   * @description This is a method for the users service to get the profile of the current user
+   * @description Get the profile of the current user.
    */
   async getProfile(): Promise<GetProfileResponse> {
-    // get user context
+    // get current user from AsyncLocalStorage
     const userContext = this.als.getStore() as UserContext;
     // find user by id
     const user = await this.userRepo.findById(userContext.userId);
@@ -43,10 +39,10 @@ export class UsersService {
 
   /**
    * @method getFriends
-   * @description This is a method for the users service to get the list of friends
+   * @description Get the list of friends of the current user.
    */
   async getFriends(request: GetFriendsRequest): Promise<GetFriendResponse[]> {
-    // get user context
+    // get current user from AsyncLocalStorage
     const userContext = this.als.getStore() as UserContext;
     // get friends
     const friends = await this.userRepo.getFriends(userContext.userId, request);

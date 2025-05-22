@@ -6,7 +6,17 @@ import { ErrorConfig } from '../exceptions/errorConfig';
 
 /**
  * @class ObjectIdValidationPipe
- * @description This is a class for the object id validation pipe
+ * @description Pipe custom to validate and transform string to MongoDB ObjectId.
+ * Used in controller parameters to ensure the validity of the ID.
+ * Throws BadRequestException when the value is not a valid ObjectId.
+ *
+ * Usage example:
+ * ```typescript
+ * @Get(':id')
+ * findOne(@Param('id', ObjectIdValidationPipe) id: Types.ObjectId) {
+ *   return this.service.findOne(id);
+ * }
+ * ```
  */
 @Injectable()
 export class ObjectIdValidationPipe implements PipeTransform<string> {

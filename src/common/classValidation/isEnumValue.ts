@@ -6,6 +6,28 @@ import {
 } from 'class-validator';
 import { TransformUtils } from '../utils/transform.utils';
 
+/**
+ * @decorator IsEnumValue
+ * @description Decorator custom to validate and transform value to enum.
+ * Combines both validation and transformation in one decorator.
+ * Supports excluding specific enum values through the excludeKeys option.
+ * Usage example:
+ * ```typescript
+ * enum UserRole {
+ *   ADMIN = 1,
+ *   USER = 2,
+ *   GUEST = 3
+ * }
+ * class UserDto {
+ *   @IsEnumValue(UserRole)
+ *   role: UserRole;
+ *
+ *   // Exclude GUEST
+ *   @IsEnumValue(UserRole, { excludeKeys: ['GUEST', 'USER'] })
+ *   restrictedRole: Exclude<UserRole, 'GUEST' | 'USER'>;
+ * }
+ * ```
+ */
 export function IsEnumValue<T>(
   enumObject: T,
   validationOptions?: ValidationOptions & { excludeKeys?: string[] },

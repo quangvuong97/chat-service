@@ -6,20 +6,12 @@ import { GetProfileResponse, GetFriendResponse } from './dto/user.response';
 import { GetFriendsRequest } from './dto/user.request';
 /**
  * @Controller('users')
- * @description This is a controller for the users
+ * @description Controller handles user-related endpoints.
  */
 @Controller('users')
 export class UsersController {
-  /**
-   * @constructor
-   * @description This is a constructor for the users controller
-   */
   constructor(private readonly usersService: UsersService) {}
 
-  /**
-   * @method getProfile
-   * @description This is a method for the users controller to get the profile of the current user
-   */
   @ApiOperation({ summary: 'Get the profile of the current user' })
   @ApiResponse({
     status: 200,

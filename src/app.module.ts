@@ -7,11 +7,8 @@ import { DatabaseModule } from './database/database.module';
 import { JwtAuthGuard } from './guards/jwt/jwt.guard';
 import { JwtStrategy } from './guards/jwt/jwt.strategy';
 import { GroupChatModule } from './modules/groupChat/groupChat.module';
+import { ChatModule } from './modules/chat/chat.module';
 
-/**
- * @Module
- * @description This is a module for the app
- */
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -22,6 +19,7 @@ import { GroupChatModule } from './modules/groupChat/groupChat.module';
     DatabaseModule,
     UsersModule,
     GroupChatModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [

@@ -23,6 +23,12 @@ import { Message } from 'src/database/message/message.schema';
 import { MessageRepository } from 'src/database/message/message.repository';
 import { keyBy } from 'lodash';
 import { EGroupChatType } from 'src/database/groupChat/groupChat.type';
+import { ChatSocketProvider } from '../chat/chat.provider';
+
+/**
+ * @class GroupChatService
+ * @description Service handles group chat functionalities.
+ */
 @Injectable()
 export class GroupChatService {
   constructor(
@@ -30,11 +36,12 @@ export class GroupChatService {
     private readonly als: AsyncLocalStorage<UserContext>,
     private readonly userRepository: UserRepository,
     private readonly messageRepository: MessageRepository,
+    private readonly chatSocketProvider: ChatSocketProvider,
   ) {}
 
   /**
    * @method createGroupChat
-   * @description This is a method for the group chat service to create a group chat
+   * @description Create a new group chat in the system.
    */
   async createGroupChat(
     request: CreateGroupChatRequest,
@@ -56,27 +63,34 @@ export class GroupChatService {
     ) {
       throw new BadRequestException(ErrorConfig.INVALID_MEMBER_NUMBER);
     }
-    // Set the name of the group chat
+    // Check if the group chat is personal and already exists then return the group chat id
     if (request.type === EGroupChatType.PERSONAL) {
-      request.name = members[0].username;
+      const existingPersonalChat = await this.groupChatRepository.getByMembers(
+        request.members,
+      );
+      if (existingPersonalChat) {
+        return { id: existingPersonalChat.id };
+      }
     }
     // Create the group chat
     const groupChat = new GroupChat(userId, request);
+    // Create the group chat in the database
     const createdGroupChat =
       await this.groupChatRepository.model.create(groupChat);
+    // Return the group chat id
     return { id: createdGroupChat.id };
   }
 
   /**
    * @method sendMessage
-   * @description This is a method for the group chat service to send a message
+   * @description Send a new message in a group chat.
    */
   async sendMessage(
     groupId: Types.ObjectId,
     request: SendMessageRequest,
   ): Promise<SendMessageResponse> {
-    // Get the user id from the async local storage
-    const { userId } = this.als.getStore() as UserContext;
+    // get current user from AsyncLocalStorage
+    const { userId, username } = this.als.getStore() as UserContext;
     // Check if the group chat exists
     const groupChat = await this.groupChatRepository.getById(groupId);
     if (!groupChat) {
@@ -85,29 +99,53 @@ export class GroupChatService {
     // Create the message
     const message = new Message(userId, groupId, request);
     const createdMessage = await this.messageRepository.model.create(message);
+    // Socket: Send the message to other clients in the group chat room
+    this.chatSocketProvider.sendMessage(
+      groupId.toString(),
+      createdMessage.toGetListMessageResponse({
+        username,
+        id: userId.toString(),
+      }),
+      request.socketId,
+    );
+    // Return the message id
     return { id: createdMessage.id };
   }
 
   /**
    * @method getMyList
-   * @description This is a method for the group chat service to get the list of group chats
+   * @description Get the list of group chats that the current user is participating in.
    */
   async getMyList(
     request: GetListGroupChatRequest,
   ): Promise<GetListGroupChatResponse[]> {
+    // Get the user id from the async local storage
     const { userId } = this.als.getStore() as UserContext;
+    // Get the list of group chats
     const groupChats = await this.groupChatRepository.getMyList(
       userId,
       request,
     );
-    return groupChats.map((groupChat) =>
-      groupChat.toGetListGroupChatResponse(),
+    const memberIds = groupChats.flatMap((groupChat) =>
+      groupChat.type === EGroupChatType.PERSONAL ? groupChat.members : [],
     );
+    const members = await this.userRepository.findByIds(memberIds);
+    const memberMap = keyBy(members, 'id');
+    // Return the list of group chats
+    return groupChats.map((groupChat) => {
+      if (groupChat.type === EGroupChatType.PERSONAL) {
+        const partnerMember = groupChat.members.filter(
+          (member) => member.toString() !== userId.toString(),
+        );
+        groupChat.name = memberMap[partnerMember[0].toString()].username;
+      }
+      return groupChat.toGetListGroupChatResponse();
+    });
   }
 
   /**
    * @method getMessages
-   * @description This is a method for the group chat service to get the list of messages
+   * @description Get the list of messages in a group chat.
    */
   async getMessages(
     groupId: Types.ObjectId,
@@ -127,7 +165,7 @@ export class GroupChatService {
     );
     const users = await this.userRepository.findByIds(userIds);
     const userMap = keyBy(users, 'id');
-
+    // Return the list of messages
     return messages.map((message) => {
       const user = userMap[message.createdBy];
       return message.toGetListMessageResponse(user);

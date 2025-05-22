@@ -2,10 +2,8 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 import { ErrorConfig } from './errorConfig';
 
-/**
- * @constant ReverseErrorConfig
- * @description This is a constant for the reverse error config
- */
+// Invert the mapping of ErrorConfig to allow looking up keys from values.
+// Convert from the structure { KEY: 'value' } to { 'value': 'KEY' }.
 const ReverseErrorConfig = Object.entries(ErrorConfig).reduce<
   Record<string, keyof typeof ErrorConfig>
 >((acc, [key, value]: [keyof typeof ErrorConfig, string]) => {
@@ -13,11 +11,13 @@ const ReverseErrorConfig = Object.entries(ErrorConfig).reduce<
   return acc;
 }, {});
 
-/**
- * @class BadRequestException
- * @description This is a class for the bad request exception
- */
 export class BadRequestException extends HttpException {
+  /**
+   * @constructor
+   * @description Initialize an exception with an error code and optional HTTP status.
+   * @param errorCode - Error code from ErrorConfig or custom error message
+   * @param status - HTTP status code (default is 422 UNPROCESSABLE_ENTITY)
+   */
   constructor(errorCode: string, status?: HttpStatus) {
     const key = ReverseErrorConfig[errorCode]?.toLocaleLowerCase();
     super(

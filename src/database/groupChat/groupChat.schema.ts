@@ -23,8 +23,8 @@ export class GroupChat extends BaseEntity {
    * @property name
    * @description This is a property for the name
    */
-  @Prop({ type: String })
-  name: string;
+  @Prop({ type: String, required: false })
+  name?: string;
 
   /**
    * @property members
@@ -40,10 +40,14 @@ export class GroupChat extends BaseEntity {
   @Prop({ type: Number, enum: EGroupChatType })
   type: EGroupChatType;
 
+  /**
+   * @method toGetListGroupChatResponse
+   * @description This is a method for the group chat to get the list of group chats
+   */
   toGetListGroupChatResponse(): GetListGroupChatResponse {
     return {
       id: this.id,
-      name: this.name,
+      name: this.name!,
       type: TransformUtils.enumToString(EGroupChatType, this.type),
     };
   }

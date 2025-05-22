@@ -7,12 +7,14 @@ import { BadRequestException } from '../exceptions/badRequest.exception';
 
 /**
  * @decorator IsObjectId
- * @description This is a decorator for the object id validation
+ * @description Decorator custom to validate and convert string to MongoDB ObjectId.
+ * Supports validation for both single values and arrays of values (when using the each option).
+ * Automatically throws BadRequestException when the value is not a valid ObjectId.
  */
 export function IsObjectId(validationOptions?: { each?: boolean }) {
   return applyDecorators(
     Transform(({ value, key }: TransformFnParams) => {
-      // Nếu value undefined hoặc null, bỏ qua validate (để @IsOptional hoạt động)
+      // If value is undefined or null, skip validation (to allow @IsOptional to work)
       if (value === undefined || value === null) {
         return value;
       }

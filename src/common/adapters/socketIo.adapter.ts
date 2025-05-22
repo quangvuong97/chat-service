@@ -13,15 +13,11 @@ import { EEnvConfig } from 'src/common/constants';
 export class SocketIoAdapter extends IoAdapter {
   private adapterConstructor: ReturnType<typeof createAdapter>;
 
-  /**
-   * @constructor
-   * @description This is a constructor for the socket io adapter
-   */
   constructor(
     private readonly appOrHttpServer: INestApplicationContext,
     private readonly configService: ConfigService,
   ) {
-    super();
+    super(appOrHttpServer);
   }
 
   /**

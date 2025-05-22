@@ -28,6 +28,7 @@ export class MongooseCustomModule {
     const providers: Provider[] = [];
     const models: ModelDefinition[] = [];
 
+    // For each repository, get the entity and create a provider
     repositories.forEach((Repository) => {
       const entity = Reflect.getMetadata(
         MONGOOSE_EX_CUSTOM_REPOSITORY,
@@ -46,10 +47,13 @@ export class MongooseCustomModule {
           return new Repository(model, als);
         },
       });
+
+      // Create a schema for the entity
       const schema = SchemaFactory.createForClass(entity);
       schema.set('toJSON', { virtuals: true });
       schema.set('toObject', { virtuals: true });
 
+      // Add methods to the schema
       let proto = entity.prototype;
       for (
         ;
@@ -57,6 +61,7 @@ export class MongooseCustomModule {
         proto = Object.getPrototypeOf(proto)
       ) {
         Object.getOwnPropertyNames(proto).forEach((prop) => {
+          // If the property is a function and not the constructor, add it to the schema
           if (
             typeof Object.getOwnPropertyDescriptor(proto, prop)?.value ===
               'function' &&
@@ -66,9 +71,12 @@ export class MongooseCustomModule {
           }
         });
       }
+
+      // Add the schema to the models
       models.push({ name: entity.name, schema });
     });
 
+    // Return the module
     return {
       module: MongooseCustomModule,
       imports: [MongooseModule.forFeature(models), AsyncLocalStorageModule],

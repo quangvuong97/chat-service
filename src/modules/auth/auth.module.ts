@@ -7,7 +7,9 @@ import { EEnvConfig } from 'src/common/constants';
 
 /**
  * @Module
- * @description This is a module for the auth
+ * @description Module handles user authentication functionalities.
+ * Configures JwtModule to create and verify tokens with an expiration time of 1 hour.
+ * Exports JwtModule to allow other modules to use JWT functionalities.
  */
 @Module({
   imports: [

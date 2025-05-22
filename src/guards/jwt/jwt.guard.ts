@@ -15,14 +15,13 @@ import { IS_PUBLIC_KEY } from 'src/common/decorator/public';
 
 /**
  * @class JwtAuthGuard
- * @description This is a class for the jwt auth guard
+ * @description Guard protects endpoints that require JWT authentication.
+ * Checks and authenticates JWT token from the Authorization header of the request.
+ * Allows endpoints marked as public to bypass authentication.
+ * Used for HTTP requests.
  */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  /**
-   * @constructor
-   * @description This is a constructor for the jwt auth guard
-   */
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
@@ -31,11 +30,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  /**
-   * @method canActivate
-   * @description This is a method for the jwt auth guard to can activate
-   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Check if the endpoint is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -44,14 +40,17 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
     const request = context.switchToHttp().getRequest();
+    // Extract the token from the header and check if it exists
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException();
     }
     try {
+      // Verify the token and set the user context to the request
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret: this.configService.get(EEnvConfig.JWT_SECRET),
       });
+      // Set the user context to the request
       request.user = payload;
     } catch (error) {
       Logger.log(error);
@@ -60,12 +59,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return true;
   }
 
-  /**
-   * @method extractTokenFromHeader
-   * @description This is a method for the jwt auth guard to extract token from header
-   */
   private extractTokenFromHeader(request: Request): string | undefined {
+    // Extract the token from the header
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    // Return the token if it exists and is in the correct format
     return type === 'Bearer' ? token : undefined;
   }
 }

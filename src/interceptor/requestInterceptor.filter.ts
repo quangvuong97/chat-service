@@ -13,14 +13,13 @@ import { JwtPayload } from 'src/guards/jwt/jwt.type';
 
 /**
  * @Injectable()
- * @description This is a class for the request interceptor
+ * @description Interceptor xử lý các request đến server.
+ * Thực hiện các tác vụ như: ghi log request, thiết lập ngữ cảnh người dùng,
+ * và định dạng response trả về cho client một cách nhất quán.
+ * Hoạt động như một middleware trong luồng xử lý request-response.
  */
 @Injectable()
 export class RequestInterceptor implements NestInterceptor {
-  /**
-   * @constructor
-   * @description This is a constructor for the request interceptor
-   */
   constructor(private readonly als: AsyncLocalStorage<UserContext>) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -41,7 +40,8 @@ export class RequestInterceptor implements NestInterceptor {
     // set user context
     const userContext = new UserContext(user);
     return new Observable((subscriber) => {
-      // add user context to async local storage
+      // Use AsyncLocalStorage to store and pass user context to all requests
+      // through all middleware and services in the request processing flow.
       const subscription = this.als.run(userContext, () => {
         return next
           .handle()

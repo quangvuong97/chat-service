@@ -3,7 +3,6 @@ import { Types } from 'mongoose';
 import { BaseEntity } from '../base.schema';
 import { SendMessageRequest } from 'src/modules/groupChat/dto/groupChat.request';
 import { GetListMessageResponse } from 'src/modules/groupChat/dto/groupChat.response';
-import { User } from '../user/user.schema';
 
 /**
  * @Schema GroupChat
@@ -43,7 +42,15 @@ export class Message extends BaseEntity {
   @Prop({ type: Boolean, default: false })
   isRead: boolean;
 
-  toGetListMessageResponse(user: User): GetListMessageResponse {
+  /**
+   * @method toGetListMessageResponse
+   * @description This is a method for the message to get the list of messages
+   * @returns GetListMessageResponse
+   */
+  toGetListMessageResponse(user: {
+    id: string;
+    username: string;
+  }): GetListMessageResponse {
     return {
       id: this.id,
       content: this.content,

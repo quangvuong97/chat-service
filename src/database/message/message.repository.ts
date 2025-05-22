@@ -8,16 +8,8 @@ import { CustomMongooseRepository } from '../mongooseCustom.decorator';
 import { GetListMessageRequest } from 'src/modules/groupChat/dto/groupChat.request';
 import { Types } from 'mongoose';
 
-/**
- * @class GroupChatRepository
- * @description This is a class for the group chat repository
- */
 @CustomMongooseRepository(Message)
 export class MessageRepository extends BaseRepository<Message> {
-  /**
-   * @constructor
-   * @description This is a constructor for the group chat repository
-   */
   constructor(
     readonly model: Model<HydratedDocument<Message>>,
     private readonly als: AsyncLocalStorage<UserContext>,
@@ -25,6 +17,10 @@ export class MessageRepository extends BaseRepository<Message> {
     super(model);
   }
 
+  /**
+   * @method getList
+   * @description This is a method for the message repository to get the list of messages
+   */
   async getList(groupId: Types.ObjectId, request: GetListMessageRequest) {
     return this.model
       .find({ groupId })

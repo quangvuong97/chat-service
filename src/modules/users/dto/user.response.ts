@@ -26,25 +26,13 @@ export class GetProfileResponse {
   username: string;
 }
 
-/**
- * @class GetFriendResponse
- * @description This is a class for the get friend response
- */
 export class GetFriendResponse {
-  /**
-   * @property userId
-   * @description This is a property for the id of the user
-   */
   @ApiProperty({
     description: 'The id of the user',
     example: '1234567890',
   })
   userId: string;
 
-  /**
-   * @property username
-   * @description This is a property for the username of the user
-   */
   @ApiProperty({
     description: 'The username of the user',
     example: 'john_doe',
