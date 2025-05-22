@@ -47,4 +47,4 @@ jobs:
             docker rm chat-server || true
             
             # Chạy container mới, mount file .env vào /app/.env trong container
-            docker run -d -p 3000:3000 -p 8080:5000 --name chat-server -v ~/chat-service/.env:/app/.env ${{ secrets.DOCKERHUB_USERNAME }}/chat-server:latest
+            docker run -d -p 3000:3000 -p 80:5000 --name chat-server -v ~/chat-service/.env:/app/.env ${{ secrets.DOCKERHUB_USERNAME }}/chat-server:latest
