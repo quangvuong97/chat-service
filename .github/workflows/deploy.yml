@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main  # Hoặc tên branch bạn muốn CI/CD
+      - main
 
 jobs:
   deploy:
@@ -13,24 +13,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Copy repo to EC2 via SSH
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
-          target: "~/chat-service"
+      # Tạo file .env từ secret để dùng lúc build nếu cần (tùy bạn)
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Deploy via SSH
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chat-server:latest .
+
+      - name: Push Docker image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/chat-server:latest
+
+      - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/chat-service
-            docker stop my-chat-demo || true
-            docker rm my-chat-demo || true
-            docker build -t my-chat-demo .
-            docker run -d -p 3000:3000 -p 8080:5000 --name my-chat-demo my-chat-demo
+            # Tạo file .env trên EC2 từ secret
+            echo "${{ secrets.ENV_FILE }}" > ~/chat-service/.env
+            
+            # Kéo image mới từ Docker Hub
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chat-server:latest
+            
+            # Dừng và xóa container cũ nếu có
+            docker stop chat-server || true
+            docker rm chat-server || true
+            
+            # Chạy container mới, mount file .env vào /app/.env trong container
+            docker run -d -p 3000:3000 -p 8080:5000 --name chat-server -v ~/chat-service/.env:/app/.env ${{ secrets.DOCKERHUB_USERNAME }}/chat-server:latest
