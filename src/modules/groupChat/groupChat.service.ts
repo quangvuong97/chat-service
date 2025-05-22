@@ -96,12 +96,16 @@ export class GroupChatService {
     if (!groupChat) {
       throw new BadRequestException(ErrorConfig.GROUP_CHAT_NOT_FOUND);
     }
+    // Check if the user is a member of the group chat
+    if (!groupChat.members.includes(userId)) {
+      throw new BadRequestException(ErrorConfig.NOT_A_MEMBER_OF_GROUP_CHAT);
+    }
     // Create the message
     const message = new Message(userId, groupId, request);
     const createdMessage = await this.messageRepository.model.create(message);
     // Socket: Send the message to other clients in the group chat room
     this.chatSocketProvider.sendMessage(
-      groupId.toString(),
+      groupChat,
       createdMessage.toGetListMessageResponse({
         username,
         id: userId.toString(),

@@ -19,6 +19,8 @@ export const ErrorConfig = {
   MEMBER_NOT_FOUND: 'member not found',
   /** Error when the number of members does not match the group chat type (personal/group) */
   INVALID_MEMBER_NUMBER: 'invalid member number',
+  /** Error when the user is not a member of the group chat */
+  NOT_A_MEMBER_OF_GROUP_CHAT: 'not a member of group chat',
 
   // ObjectId
   /** Error when the provided value is not a valid MongoDB ObjectId */
