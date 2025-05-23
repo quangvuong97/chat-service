@@ -16,7 +16,7 @@ import { EEnvConfig } from 'src/common/constants';
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get(EEnvConfig.JWT_SECRET),
-        signOptions: { expiresIn: '1h' },
+        signOptions: { expiresIn: '1d' },
       }),
       inject: [ConfigService],
     }),

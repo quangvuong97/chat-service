@@ -1,85 +1,201 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Chat Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Demo & Links
+- **Demo:** [http://ec2-13-239-36-171.ap-southeast-2.compute.amazonaws.com/](http://ec2-13-239-36-171.ap-southeast-2.compute.amazonaws.com/)
+- **REST API Documentation:** [http://ec2-13-239-36-171.ap-southeast-2.compute.amazonaws.com:3000/api](http://ec2-13-239-36-171.ap-southeast-2.compute.amazonaws.com:3000/api)
+- **Frontend Source:** [https://github.com/quangvuong97/web-chat](https://github.com/quangvuong97/web-chat)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## CI/CD
+Dự án được cấu hình CI/CD để tự động đẩy lên EC2 của AWS, đảm bảo quá trình triển khai nhanh chóng và hiệu quả.
 
-## Description
+## Mô tả
+Dự án Chat Service là một ứng dụng chat realtime được xây dựng trên nền tảng NestJS, sử dụng WebSocket để xử lý các kết nối realtime và REST API cho các tác vụ thông thường.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Kiến trúc hệ thống
 
-## Project setup
+### Sơ đồ kiến trúc
 
-```bash
-$ yarn install
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                Client Layer                                 │
+│          ┌─────────────┐                           ┌─────────────┐          │
+│          │ Web Client  │                           │Mobile Client│          │
+│          └──────┬──────┘                           └──────┬──────┘          │
+└─────────────────┼─────────────────────────────────────────┼─────────────────┘
+                  │                                         │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             Application Layer                               │
+│      ┌───────────────────────────┐        ┌───────────────────────────┐     │
+│      │     REST API Requests     │        │   WebSocket Connections   │     │
+│      └─────────────┬─────────────┘        └─────────────┬─────────────┘     │
+└────────────────────┼────────────────────────────────────┼───────────────────┘
+                     │                                    │               
+┌────────────────────│────────────────────────────────────│───────────────────┐
+┌  ┌─────────────────┼────────────────┐    ┌──────────────┼────────────┐      │
+│  │      REST API Modules            │    │     WebSocket Module      │      │
+│  │ ┌─────────┬─────────┬─────────┐  │    │     ┌───────────────┐     │      │
+│  │ │  Auth   │  Users  │  Group  │  │    │     │   Chat        │     │      │
+│  │ │ Module  │ Module  │  Chat   │  │    │     │   Module      │     │      │
+│  │ └─────────┴─────────┴─────────┘  │    │     └───────────────┘     │      │
+│  └─────────────────┬────────────────┘    └──────────────┬────────────┘      │
+└────────────────────│────────────────────────────────────│───────────────────┘
+                     │                                    │              
+┌───────────────────────────────────────┬──────────────────────────────────────┐
+│           MongoDB                     │       Socket.IO Adapter (Redis)      │
+└───────────────────────────────────────┴──────────────────────────────────────┘
 ```
 
-## Compile and run the project
+### Các thành phần chính
 
+1. **Client Layer**
+   - Web Client: Giao diện web cho người dùng
+   - Mobile Client: Ứng dụng di động cho người dùng
+   - Hỗ trợ cả REST API và WebSocket connections
+
+2. **Application Layer**
+   - REST API Modules:
+     - Auth Module: Xử lý đăng nhập, đăng ký
+     - Users Module: Quản lý thông tin người dùng
+     - GroupChat Module: Quản lý nhóm chat, thành viên
+   - WebSocket Module:
+     - Chat Module: Xử lý kết nối realtime và phân phối tin nhắn
+
+3. **Infrastructure Layer**
+   - MongoDB: Lưu trữ dữ liệu chính
+   - Socket.IO Adapter: Quản lý các kết nối WebSocket
+
+### Luồng xử lý chính
+
+
+
+
+## Cài đặt và Chạy dự án
+
+### Yêu cầu hệ thống
+- Node.js >= 16
+- Yarn package manager
+- MongoDB
+- Redis cho socketIoAdapter
+
+### Cài đặt môi trường local
+1. Clone repository:
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+git clone <repository-url>
+cd chat-service
 ```
 
-## Run tests
-
+2. Cài đặt dependencies:
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+yarn install
 ```
 
-## Resources
+3. Tạo file môi trường:
+```bash
+cp .env
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+4. Cấu hình các biến môi trường trong file .env:
+```env
+# Server
+API_PORT=<your api port>
+# Database
+MONGODB_URI=<your mongodb uri>
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Redis
+REDIS_HOST=<your redis host>
+REDIS_PORT=<your redis port>
+REDIS_USERNAME=<your redis username>
+REDIS_PASSWORD=<your redis password>
 
-## Support
+# JWT
+JWT_SECRET=<your-secret-key>
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+5. Chạy ứng dụng:
+```bash
+# Development mode
+yarn start:dev
+```
+## WebSocket API Documentation
 
-## Stay in touch
+### Kết nối WebSocket
+```javascript
+const socket = io("http://localhost:3000/chat", {
+  auth: { token },
+  transports: ["websocket"],
+});
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Các sự kiện WebSocket
+
+#### 1. Kết nối và Xác thực
+- **Event**: `connection`
+- **Payload**: JWT token trong header
+- **Response**: 
+  - Kết nối thành công: Client được thêm vào phòng riêng của user
+  - Lỗi xác thực: Client bị ngắt kết nối và nhận thông báo lỗi
+
+#### 2. Tham gia nhóm chat
+- **Event**: `join_group`
+- **Payload**:
+```typescript
+{
+  groupId: string;
+}
+```
+- **Mô tả**: Client tham gia vào một cuộc trò chuyện
+- **Response**:
+  - Thành công: Client được thêm vào phòng chat của nhóm
+  - Lỗi: 
+    - Nhóm không tồn tại
+    - User không phải thành viên của nhóm
+    - Lỗi xác thực dữ liệu
+
+#### 3. Rời nhóm chat
+- **Event**: `leave_group`
+- **Payload**:
+```typescript
+{
+  groupId: string;
+}
+```
+- **Mô tả**: Client không trong cuộc trò chuyện nữa (ko phải là rời nhóm)
+
+#### 4. Nhận tin nhắn mới
+- **Event**: `new_message`
+- **Payload**: Thông tin tin nhắn mới (GetListMessageResponse)
+- **Mô tả**: khi một tin nhắn được gửi thành công, server gửi tin nhắn mới đến những ai đang trong cuộc trò chuyện đó
+
+#### 5. Thông báo có tin nhắn mới
+- **Event**: `group_new_message`
+- **Payload**: Thông tin nhóm chat (GroupChat)
+- **Mô tả**: khi một tin nhắn được gửi thành công, server gửi thông báo đến tất cả thành viên trong nhóm (trừ thiết bị gửi)
+
+```
+- **Mô tả**: Sự kiện này được gửi khi có lỗi xảy ra trong quá trình xử lý các sự kiện khác
+
+## Testing
+
+```bash
+# Unit tests
+yarn test
+
+# Test coverage
+yarn test:cov
+```
+
+## Docker
+
+Build và chạy ứng dụng với Docker:
+
+```bash
+# Build image
+docker build -t chat-service .
+
+# Run container
+docker run -p 3000:3000 -p 8080:5000 my-chat-demo
+```
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+[MIT licensed](LICENSE)
